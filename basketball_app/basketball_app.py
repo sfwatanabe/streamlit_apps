@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-
 def page_intro():
     """
     Setup the page header and markdown for the introduction paragraph.
@@ -33,8 +32,13 @@ def load_data(year: str) -> pd.DataFrame:
     url = f"https://www.basketball-reference.com/leagues/NBA_{year}_per_game.html"
     html = pd.read_html(url, header=0)
     df = html[0]
-    raw = df.drop(df[df.Age == 'Age'].index)    # Drop the repeating headers
-    raw = raw.fillna(0)
+    raw = df.drop(df[df.Age == 'Age'].index)  # Drop the repeating headers
+    numeric_cols = ['Rk', 'Age', 'G', 'GS', 'MP', 'FG', 'FGA', 'FG%',
+                    '3P', '3PA', '3P%', '2P', '2PA', '2P%', 'eFG%', 'FT', 'FTA', 'FT%',
+                    'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS']
+    # Handle the fillna for numerics first
+    raw[raw.filter(regex='\w+[%]').columns] = raw[raw.filter(regex='\w+[%]').columns].fillna(0)
+    raw[numeric_cols] = raw[numeric_cols].apply(pd.to_numeric)
     player_stats = raw.drop(['Rk'], axis=1)
     return player_stats
 
@@ -66,7 +70,6 @@ def main():
              f"{df_selected_team.shape[1]} columns.")
     st.dataframe(df_selected_team)
 
-    # Download the NBA
 
 if __name__ == '__main__':
     main()
