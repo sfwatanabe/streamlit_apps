@@ -43,6 +43,14 @@ def load_data(year: str) -> pd.DataFrame:
     return player_stats
 
 
+def file_download(df: pd.DataFrame):
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()
+    href = f'<a href="data:file/csv;base64,{b64}" ' \
+           f'download="player_stats.csv">Download CSV File</a>'
+    return href
+
+
 def main():
     """
     Main application logic for the NBA EDA stream-lit application that allows for
@@ -69,6 +77,21 @@ def main():
     st.write(f"Data Dimension: {df_selected_team.shape[0]} rows and "
              f"{df_selected_team.shape[1]} columns.")
     st.dataframe(df_selected_team)
+
+    # Add a link to download the current results to a csv.
+    st.markdown(file_download(df_selected_team), unsafe_allow_html=True)
+
+    # Heat-map for the stats!
+    if st.button("Intercorrelation Heatmap"):
+        st.header("Intercorrelation Matrix Heatmap")
+
+        corr = df_selected_team.corr()
+        mask = np.zeros_like(corr)
+        mask[np.triu_indices_from(mask)] = True
+        with sns.axes_style("white"):
+            f, ax = plt.subplots(figsize=(7, 5))
+            ax = sns.heatmap(corr, mask=mask, vmax=1, square=True)
+        st.pyplot(f)
 
 
 if __name__ == '__main__':
